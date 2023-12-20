@@ -2,18 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[CreateAssetMenu(fileName = "Life_Cell",menuName = "Cell/Life", order = 0)]
 public class Life_Cell : Cell
 {
     //          REFERENCES
-    public RenderTexture vizTex;
+    public Material vizMat;
+
+    //          INTERNAL
+    private Texture2D _vizTex;
 
     //          BEHAVIORS
-
-
-    //          CELL
-    public override void Update(Data self, Cell_Grid grid, float deltaTime)
+    public override void UpdateCell(Data self, Cell_Grid grid, float deltaTime)
     {
-        // Enumerate Neighbors, adding up those alive
+        // Create delegate for callback
         int numAlive = 0;
         EnumerationCallback cb = ng =>
         {
@@ -21,6 +22,7 @@ public class Life_Cell : Cell
                 numAlive++;
         };
 
+        // Enumerate neighbors
         this.EnumerateNeighbors(self, grid, cb);
 
         // Interpret results
@@ -33,16 +35,41 @@ public class Life_Cell : Cell
         else if (numAlive == 3)
             self.alive = true;
 
-        grid.SetCell(self, self.addr);
+        // Apply state to self
+        grid.SetCell(self);
     }
 
-    public override void Visualize(Data self, Cell_Grid grid)
+    public override void Visualize(Cell_Grid grid)
     {
-        // TODO
+        // Create CPU side texture
+        if (this._vizTex == null || this._vizTex.width != grid.Size.x || this._vizTex.height != grid.Size.y)
+        {
+            this._vizTex = new Texture2D(grid.Size.x, grid.Size.y, TextureFormat.BGRA32, false);
+            this._vizTex.filterMode = FilterMode.Point;
+        }
+
+        // Create enumeration function
+        EnumerationCallback cb = c =>
+        {
+            // Guard
+            if (c.typ != Data.Type.LIFE)
+                return;
+
+            this._vizTex.SetPixel(c.addr.x, c.addr.y, (c.alive ? Color.blue : Color.red));
+        };
+
+        // Enumerate grid
+        grid.EnumerateGrid(cb);
+
+        // Apply texture writes
+        this._vizTex.Apply();
+
+        // Apply texture to material
+        this.vizMat.SetTexture("_BaseMap", this._vizTex);
     }
 
     public override void Interact(Data self, Data other, Cell_Grid grid)
     {
-        // TODO
+        // No-op for Life
     }
 }

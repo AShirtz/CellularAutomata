@@ -44,11 +44,7 @@ public abstract class Cell : ScriptableObject
         public float ignitionTemperature;
     }
 
-    public delegate void EnumerationCallback(Data nghbr);
-
-    //          STATIC
-
-    //          REFERENCES
+    public delegate void EnumerationCallback(Data cl);
 
     //          PARAMETERS
     [Tooltip("Data for an uninitialized instance of this type.")]
@@ -58,28 +54,23 @@ public abstract class Cell : ScriptableObject
     [Tooltip("Radius of the neighborhood of this cell type.")]
     public int neighborhoodRadius = 1;
 
-    //          INTERNAL
-
     //          LIFECYCLE
-
     /// <summary>
     /// Allows the cell to update it's internal state.
     /// </summary>
     /// <param name="self">The cell that is acting.</param>
     /// <param name="grid">Reference to the cell grid.</param>
     /// <param name="deltaTime">The amount of time that's passed since the last update.</param>
-    public abstract void Update(Cell.Data self, Cell_Grid grid, float deltaTime);
+    public abstract void UpdateCell(Cell.Data self, Cell_Grid grid, float deltaTime);
 
     /// <summary>
     /// Allows a cell to update it's visualization.
     /// May No-op for cells that are visualized as a group (e.g., as a texture).
     /// </summary>
-    /// <param name="self"></param>
     /// <param name="grid"></param>
-    public abstract void Visualize(Cell.Data self, Cell_Grid grid);
+    public abstract void Visualize(Cell_Grid grid);
 
     //          BEHAVIORS
-
     /// <summary>
     /// Scans the Moore neighborhood around the given cell.
     /// https://en.wikipedia.org/wiki/Moore_neighborhood

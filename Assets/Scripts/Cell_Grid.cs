@@ -40,11 +40,14 @@ public class Cell_Grid : MonoBehaviour
     //          PARAMETERS
     public bool Initialize = false;
     public RunType run = RunType.NONE;
+    public float updateInterval = 0.1f;
 
     public Vector2Int Size;
     public Wrap wrp;
 
     public TypeMapping[] Mapping;
+    public Cell.Data[] initialState;
+    public Cell defaultState;
 
     //          PROPERTIES
     private Cell.Data[,] _mapRead { get { return this._map[this._rwToggle ? 0 : 1]; } }
@@ -52,6 +55,7 @@ public class Cell_Grid : MonoBehaviour
 
     //          INTERNAL
     private Dictionary<Cell.Data.Type, Cell> _typeMapping;
+    private HashSet<Cell> _activeCellTypes;
 
     private bool _rwToggle;
     private Cell.Data[][,] _map;
@@ -70,16 +74,24 @@ public class Cell_Grid : MonoBehaviour
         if (this.Initialize)
             this.InitializeGrid();
 
-        if (this.run != RunType.NONE)
+        if (this.run != RunType.NONE && (Time.time - this._lastUpdateTime) > this.updateInterval)
         {
             if (this.run == RunType.SINGLE)
                 this.run = RunType.NONE;
 
             this.RunAutomata();
+            this.VisualizeAutomata();
         }
     }
 
     //          BEHAVIORS
+    public void EnumerateGrid(Cell.EnumerationCallback callback)
+    {
+        for (int x = 0; x < this._size.x; x++)
+            for (int y = 0; y < this._size.y; y++)
+                callback(this.GetCell(x, y));
+    }
+
     private Vector2Int ConditionAddress(Vector2Int addr)
     {
         Vector2Int result = new Vector2Int();
@@ -112,7 +124,7 @@ public class Cell_Grid : MonoBehaviour
             this._typeMapping[this.Mapping[i].typ] = this.Mapping[i].cellBehavior;
 
         // Create storage
-        if (this._map == null || this._size != this.Size)
+        if (true || (this._map == null || this._size != this.Size))
         {
             this._size = this.Size;
 
@@ -122,28 +134,44 @@ public class Cell_Grid : MonoBehaviour
             this._map[1] = new Cell.Data[this._size.x, this._size.y];
         }
 
-        // TODO: Load initial state somehow
+        // Load default state
+        Cell.EnumerationCallback cb = c =>
+        {
+            // Copy default state
+            Cell.Data dflt = this.defaultState.defaultData;
+            dflt.addr = c.addr;
+
+            // Set cell state
+            this.SetCell(dflt);
+        };
+        this.EnumerateGrid(cb);
+
+        // Load initial state
+        this._activeCellTypes = new HashSet<Cell>();
+        for (int i = 0; i < this.initialState.Length; i++)
+        {
+            this.SetCell(this.initialState[i]);
+            this._activeCellTypes.Add(this._typeMapping[this.initialState[i].typ]);
+        }
+
+        // Visualize inital state
+        this.VisualizeAutomata();
     }
 
     private void RunAutomata()
     {
         float deltaT = Time.time - this._lastUpdateTime;
-
-        for (int x = 0; x < this._size.x; x++)
+        Cell.EnumerationCallback cb = c =>
         {
-            for (int y = 0; y < this._size.y; y++)
+            // Get Cell behavior from mapping
+            if (this._typeMapping != null && this._typeMapping.ContainsKey(c.typ))
             {
-                // Get cell data
-                Cell.Data dt = this.GetCell(x, y);
-
-                // Get Cell behavior from mapping
-                if (this._typeMapping != null && this._typeMapping.ContainsKey(dt.typ))
-                {
-                    // Trigger cell to act
-                    this._typeMapping[dt.typ].Update(dt, this, deltaT);
-                }
+                // Trigger cell to act
+                this._typeMapping[c.typ].UpdateCell(c, this, deltaT);
             }
-        }
+        };
+
+        this.EnumerateGrid(cb);
 
         // Swap Read and Write
         this._rwToggle = !this._rwToggle;
@@ -154,21 +182,8 @@ public class Cell_Grid : MonoBehaviour
 
     private void VisualizeAutomata()
     {
-        for (int x = 0; x < this._size.x; x++)
-        {
-            for (int y = 0; y < this._size.y; y++)
-            {
-                // Get cell data
-                Cell.Data dt = this.GetCell(x, y);
-
-                // Get Cell behavior from mapping
-                if (this._typeMapping != null && this._typeMapping.ContainsKey(dt.typ))
-                {
-                    // Trigger cell to act
-                    this._typeMapping[dt.typ].Visualize(dt, this);
-                }
-            }
-        }
+        foreach (Cell cl in this._activeCellTypes)
+            cl.Visualize(this);
     }
 
     public Cell.Data GetCell(int x, int y)
@@ -181,8 +196,15 @@ public class Cell_Grid : MonoBehaviour
         // Condition address
         addr = this.ConditionAddress(addr);
 
+        // Get cell data
+        Cell.Data dt = this._mapRead[addr.x, addr.y];
+
+        // Catch uninitialized addresses
+        if (dt.addr != addr)
+            dt.addr = addr;
+
         // Return
-        return this._mapRead[addr.x, addr.y];
+        return dt;
     }
 
     public void SetCell(Cell.Data dt)
