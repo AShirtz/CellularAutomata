@@ -22,12 +22,17 @@ public abstract class Cell : ScriptableObject
         {
             INVALID     = 0,
 
+            // TODO: Add whatever types you want here
+
+            // Conway's Game of Life
             LIFE        = 1,
 
-            GRASS       = 2,
-            TREE        = 3,
+            // Fire-Sim
+            PLANT       = 2,
+            STONE       = 3,
             LAVA        = 4,
-            FIRE        = 5
+            FIRE        = 5,
+            WATER       = 6
         }
 
         public Type typ;
@@ -41,7 +46,6 @@ public abstract class Cell : ScriptableObject
         // Brush Fire Sim
         public float curTemperature;
         public float curFuel;
-        public float ignitionTemperature;
     }
 
     public delegate void EnumerationCallback(Data cl);
@@ -49,10 +53,6 @@ public abstract class Cell : ScriptableObject
     //          PARAMETERS
     [Tooltip("Data for an uninitialized instance of this type.")]
     public Cell.Data defaultData;
-
-    // https://en.wikipedia.org/wiki/Moore_neighborhood
-    [Tooltip("Radius of the neighborhood of this cell type.")]
-    public int neighborhoodRadius = 1;
 
     //          LIFECYCLE
     /// <summary>
@@ -77,16 +77,12 @@ public abstract class Cell : ScriptableObject
     /// </summary>
     /// <param name="self">The cell that is acting.</param>
     /// <param name="grid">Reference to the cell grid.</param>
-    public virtual void EnumerateNeighbors(Cell.Data self, Cell_Grid grid, EnumerationCallback callback)
+    public virtual void EnumerateNeighbors(Cell.Data self, int radius, Cell_Grid grid, EnumerationCallback callback)
     {
-        for (int xOff = -1 * this.neighborhoodRadius; xOff <= 1; xOff++)
+        for (int xOff = -1 * radius; xOff <= radius; xOff++)
         {
-            for (int yOff = -1 * this.neighborhoodRadius; yOff <= 1; yOff++)
+            for (int yOff = -1 * radius; yOff <= radius; yOff++)
             {
-                // Don't act on self
-                if (xOff == 0 && yOff == 0)
-                    continue;
-
                 // Get address of other cell
                 Vector2Int addr = self.addr + new Vector2Int(xOff, yOff);
 
@@ -95,12 +91,4 @@ public abstract class Cell : ScriptableObject
             }
         }
     }
-
-    /// <summary>
-    /// Allows cells to have their own interaction between types
-    /// </summary>
-    /// <param name="self">The cell that is acting.</param>
-    /// <param name="other">The other cell that is being reacted to.</param>
-    /// <param name="grid"></param>
-    public abstract void Interact(Cell.Data self, Cell.Data other, Cell_Grid grid);
 }

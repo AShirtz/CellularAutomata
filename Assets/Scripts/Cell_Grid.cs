@@ -99,8 +99,8 @@ public class Cell_Grid : MonoBehaviour
         switch(this.wrp)
         {
             case Wrap.CLAMP:
-                result.x = Mathf.Max(Mathf.Min(addr.x, this._size.x), 0);
-                result.y = Mathf.Max(Mathf.Min(addr.y, this._size.y), 0);
+                result.x = Mathf.Max(Mathf.Min(addr.x, this._size.x - 1), 0);
+                result.y = Mathf.Max(Mathf.Min(addr.y, this._size.y - 1), 0);
                 break;
             case Wrap.REPEAT:
                 result.x = (int) Mathf.Repeat(addr.x, this._size.x);
@@ -153,6 +153,9 @@ public class Cell_Grid : MonoBehaviour
             this.SetCell(this.initialState[i]);
             this._activeCellTypes.Add(this._typeMapping[this.initialState[i].typ]);
         }
+
+        // Apply changes by swapping read and write
+        this._rwToggle = !this._rwToggle;
 
         // Visualize inital state
         this.VisualizeAutomata();

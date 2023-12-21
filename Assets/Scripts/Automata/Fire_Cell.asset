@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5af77a765c9a7dc4b865f4895f9b346c, type: 3}
+  m_Name: Fire_Cell
+  m_EditorClassIdentifier: 
+  defaultData:
+    typ: 2
+    addr: {x: 0, y: 0}
+    alive: 0
+    curTemperature: 0
+    curFuel: 100
+  vizMat: {fileID: 2100000, guid: 8ad6ef66d5350bc49ba99720821f20a3, type: 2}
+  ignitionTemperature: 100
+  maxFuel: 100
+  fuelGrowthRate: 15
+  fuelBurnRate: 35
+  burnTempIncreaseRate: 35
+  stoneCoolTempRate: 25
+  viewData: 0

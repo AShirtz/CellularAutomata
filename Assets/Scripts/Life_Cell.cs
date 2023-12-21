@@ -18,12 +18,17 @@ public class Life_Cell : Cell
         int numAlive = 0;
         EnumerationCallback cb = ng =>
         {
+            // Skip self
+            if (ng.addr == self.addr)
+                return;
+
+            // Count up alive neighbors
             if (ng.typ == Data.Type.LIFE && ng.alive)
                 numAlive++;
         };
 
         // Enumerate neighbors
-        this.EnumerateNeighbors(self, grid, cb);
+        this.EnumerateNeighbors(self, 1, grid, cb);
 
         // Interpret results
         if (numAlive < 2)
@@ -48,15 +53,17 @@ public class Life_Cell : Cell
             this._vizTex.filterMode = FilterMode.Point;
         }
 
-        // Create enumeration function
-        EnumerationCallback cb = c =>
-        {
-            // Guard
-            if (c.typ != Data.Type.LIFE)
-                return;
+        // Create enumeration callback
+        EnumerationCallback cb =
+            c =>
+            {
+                // Guard
+                if (c.typ != Data.Type.LIFE)
+                    return;
 
-            this._vizTex.SetPixel(c.addr.x, c.addr.y, (c.alive ? Color.blue : Color.red));
-        };
+                // Color based on state
+                this._vizTex.SetPixel(c.addr.x, c.addr.y, (c.alive ? Color.blue : Color.red));
+            };
 
         // Enumerate grid
         grid.EnumerateGrid(cb);
@@ -66,10 +73,5 @@ public class Life_Cell : Cell
 
         // Apply texture to material
         this.vizMat.SetTexture("_BaseMap", this._vizTex);
-    }
-
-    public override void Interact(Data self, Data other, Cell_Grid grid)
-    {
-        // No-op for Life
     }
 }
